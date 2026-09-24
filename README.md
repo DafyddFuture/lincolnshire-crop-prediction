@@ -137,8 +137,36 @@ crome_lucode_lookup_2024.xlsx
 crome_lucode_lookup_2025.xlsx
 ```
 
-Run the notebooks in numerical order. Notebook 2 creates the interim geographical dataset required by Notebooks 3 and 4.
+Run the notebooks in numerical order. Notebook 2 creates the interim geographical dataset required by Notebooks 3, 4 and 5. Notebook 5 performs spatial validation and model tuning and exports its generated results to `data/processed`.
 
 ## Data note
 
 Raw and processed datasets are intentionally excluded from version control. This keeps the repository lightweight and avoids publishing generated data files.
+
+### 5. Spatial validation and model tuning
+
+`notebooks/05_spatial_validation_and_model_tuning.ipynb`
+
+The random forest model was evaluated using a stricter geographical validation design. The study area was divided into one-kilometre spatial blocks, with the easternmost six blocks reserved as an untouched test area. Grouped cross-validation prevented the same spatial block from appearing in both training and validation data.
+
+Grid search selected a random forest with 200 trees, a maximum depth of 12 and balanced subsample class weights.
+
+Performance on the geographical test area was:
+
+| Metric | Original random forest | Tuned random forest |
+|---|---:|---:|
+| Accuracy | 59.9% | 66.3% |
+| Balanced accuracy | 35.5% | 36.3% |
+| Macro F1 | 30.7% | 33.6% |
+
+The tuned model performed strongly for Winter Wheat, Grass and non-vegetated land but continued to struggle with several rare crop classes. Approximately half of its total feature importance came from easting and northing, indicating a strong geographical influence on its predictions.
+
+- Winter Wheat increased from 29.2% of cells in 2024 to 46.3% in 2025.
+- Approximately 75.9% of sampled cells received a different annual classification.
+- K-nearest neighbours achieved the highest original-model accuracy at 64.8%.
+- The tuned random forest achieved 66.3% accuracy, 36.3% balanced accuracy and 33.6% Macro F1 on the geographical test area.
+- Spatially grouped validation provided a more realistic test of performance in an unseen location.
+- The tuned model performed strongly for Winter Wheat, Grass and non-vegetated land but failed to identify some rare crop classes.
+- Easting and northing contributed approximately 50.4% of total random-forest feature importance, showing a strong geographical influence.
+- K-means identified four overlapping geographical and agricultural groups.
+- Classification changes may reflect crop rotation, genuine land-use change or differences in annual satellite classification.
